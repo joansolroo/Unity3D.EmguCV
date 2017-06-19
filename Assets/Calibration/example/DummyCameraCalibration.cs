@@ -58,18 +58,18 @@ public class DummyCameraCalibration : MonoBehaviour
             //Compute calibration
 
             Emgu.CV.CvEnum.CalibType flags = Emgu.CV.CvEnum.CalibType.UseIntrinsicGuess;   // uses the intrinsicMatrix as initial estimation, or generates an initial estimation using imageSize
-            //flags |= CalibType.FixFocalLength;      // if (CV_CALIB_USE_INTRINSIC_GUESS) then: {fx,fy} are constant
-           // flags |= CalibType.FixAspectRatio;      // if (CV_CALIB_USE_INTRINSIC_GUESS) then: fy is a free variable, fx/fy stays constant
-            //flags |= CalibType.FixPrincipalPoint;   // if (CV_CALIB_USE_INTRINSIC_GUESS) then: {cx,cy} are constant
-            /*flags |= (CalibType.FixK1               //  Given CalibType.FixK{i}: if (CV_CALIB_USE_INTRINSIC_GUESS) then: K{i} = distortionCoefficents[i], else:k ki = 0
-                     | CalibType.FixK2
-                     | CalibType.FixK3
-                     | CalibType.FixK4
-                     | CalibType.FixK5
-                     | CalibType.FixK6);
-           // flags |= CalibType.FixIntrinsic;
-            flags |= CalibType.ZeroTangentDist;     // tangential distortion is zero: {P1,P2} = {0,0}
-            */
+                                                                                           //flags |= CalibType.FixFocalLength;      // if (CV_CALIB_USE_INTRINSIC_GUESS) then: {fx,fy} are constant
+                                                                                           // flags |= CalibType.FixAspectRatio;      // if (CV_CALIB_USE_INTRINSIC_GUESS) then: fy is a free variable, fx/fy stays constant
+                                                                                           //flags |= CalibType.FixPrincipalPoint;   // if (CV_CALIB_USE_INTRINSIC_GUESS) then: {cx,cy} are constant
+                                                                                           /*flags |= (CalibType.FixK1               //  Given CalibType.FixK{i}: if (CV_CALIB_USE_INTRINSIC_GUESS) then: K{i} = distortionCoefficents[i], else:k ki = 0
+                                                                                                    | CalibType.FixK2
+                                                                                                    | CalibType.FixK3
+                                                                                                    | CalibType.FixK4
+                                                                                                    | CalibType.FixK5
+                                                                                                    | CalibType.FixK6);
+                                                                                          // flags |= CalibType.FixIntrinsic;
+                                                                                           flags |= CalibType.ZeroTangentDist;     // tangential distortion is zero: {P1,P2} = {0,0}
+                                                                                           */
             result = Calibration.ComputeCameraCalibration(xyz, uv, new System.Drawing.Size(_camera.pixelWidth, _camera.pixelHeight), new Emgu.CV.Matrix<double>(3, 3), out status);
             Debug.Log(status);
             

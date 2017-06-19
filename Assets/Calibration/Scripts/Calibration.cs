@@ -34,9 +34,9 @@ public class Calibration
                 {
                     Matrix4x4 intrinsicMatrix = new Matrix4x4();
                     intrinsicMatrix[0, 0] = ((this.focalLength.x) / width) * 2;
-                    //intrinsicMatrix[0, 2] = (1-this.center.x) / width;
+                    intrinsicMatrix[0, 2] = 0.5f - (this.center.x) / width;
                     intrinsicMatrix[1, 1] = ((this.focalLength.y) / height) * 2;
-                    //intrinsicMatrix[1, 2] = (-(this.center.y) / height);
+                    intrinsicMatrix[1, 2] = 0.5f-((this.center.y) / height);
                     intrinsicMatrix[2, 2] = 1;
                     return intrinsicMatrix;
                 }
@@ -56,8 +56,6 @@ public class Calibration
             public Matrix4x4 ProjectionMatrix(float near, float far)
             {
                 Matrix4x4 projection = this.IntrinsicMatrix;
-                projection[2, 0] = 0; //TODO find why cx and cy are not valid
-                projection[2, 1] = 0; //TODO find why cx and cy are not valid
                 projection[2, 3] = -2 * (far * near) / (far - near);
                 projection[2, 2] = -(far + near) / (far - near);
                 projection[3, 2] = -1f;
@@ -121,27 +119,30 @@ public class Calibration
 
             public Distortion(Emgu.CV.IInputOutputArray cvMat)
             {
-                float[] coefficients = new float[8];
+                double[] coefficients = new double[8];
                 Matrix<double> mat = (Matrix<double>)cvMat;
-                k1 = (float)mat[0, 0];
-                k2 = (float)mat[0, 1];
-                p1 = (float)mat[0, 2];
-                p2 = (float)mat[0, 3];
+                Mat m = cvMat.GetOutputArray().GetMat();
+                
+                m.CopyTo<double>(coefficients);
+                k1 = (float)coefficients[0];
+                k2 = (float)coefficients[1];
+                p1 = (float)coefficients[2];
+                p2 = (float)coefficients[3];
 
                 k3 = k4 = k5 = k6 = 0;
-                int length = mat.Height;
-                if (length > 4)
+                int length = coefficients.Length;
+                if (length > 4)//stupid check
                 {
-                    k3 = (float)mat[0, 4];
+                    k3 = (float)coefficients[4];
                     if (length > 5)
                     {
-                        k4 = (float)mat[0, 5];
+                        k4 = (float)coefficients[5];
                         if (length > 6)
                         {
-                            k5 = (float)mat[0, 6];
+                            k5 = (float)coefficients[6];
                             if (length > 7)
                             {
-                                k6 = (float)mat[0, 7];
+                                k6 = (float)coefficients[7];
                             }
                         }
                     }
