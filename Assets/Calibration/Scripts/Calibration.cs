@@ -22,35 +22,54 @@ public class Calibration
             public float fx { get { return focalLength.x; } }
             public float fy { get { return focalLength.y; } }
             public float cx { get { return center.x; } }
-            public float cy { get { return center.x; } }
+            public float cy { get { return center.y; } }
 
+            public int width;
+            public int height;
             // The output camera matrix(A)[fx 0 cx; 0 fy cy; 0 0 1]
             // the remaining cells are zero
-            Matrix4x4 AsMatrix()
+            public Matrix4x4 IntrinsicMatrix
             {
-                Matrix4x4 intrinsicMatrix = new Matrix4x4();
-                intrinsicMatrix[0, 0] = this.focalLength.x;
-                intrinsicMatrix[0, 2] = this.center.x;
-                intrinsicMatrix[1, 1] = this.focalLength.y;
-                intrinsicMatrix[1, 2] = this.center.y;
-                intrinsicMatrix[2, 2] = 1;
-                return intrinsicMatrix;
+                get
+                {
+                    Matrix4x4 intrinsicMatrix = new Matrix4x4();
+                    intrinsicMatrix[0, 0] = ((this.focalLength.x) / width) * 2;
+                    //intrinsicMatrix[0, 2] = (1-this.center.x) / width;
+                    intrinsicMatrix[1, 1] = ((this.focalLength.y) / height) * 2;
+                    //intrinsicMatrix[1, 2] = (-(this.center.y) / height);
+                    intrinsicMatrix[2, 2] = 1;
+                    return intrinsicMatrix;
+                }
             }
-            public Intrinsics(Matrix<double> cvMat)
+            public Intrinsics(Matrix<double> cvMat, Size resolution)
             {
+                DebugMatrix(cvMat);
                 center = new Vector2(
                     (float)cvMat[0, 2],   //center x
                     (float)cvMat[1, 2]);  //center y
                 focalLength = new Vector2(
                     (float)cvMat[0, 0],   //size x
                     (float)cvMat[1, 1]);  //size y
+                width = resolution.Width;
+                height = resolution.Height;
+            }
+            public Matrix4x4 ProjectionMatrix(float near, float far)
+            {
+                Matrix4x4 projection = this.IntrinsicMatrix;
+                projection[2, 0] = 0; //TODO find why cx and cy are not valid
+                projection[2, 1] = 0; //TODO find why cx and cy are not valid
+                projection[2, 3] = -2 * (far * near) / (far - near);
+                projection[2, 2] = -(far + near) / (far - near);
+                projection[3, 2] = -1f;
+
+                return projection;
             }
         }
         public struct Extrinsics
         {
             Vector3 _position;
             Vector3 _rotation;
-            
+
 
             public Extrinsics(Vector3 __position, Vector3 __rotation)
             {
@@ -65,9 +84,9 @@ public class Calibration
                 Quaternion rot = Quaternion.AngleAxis(theta, axis);
                 Vector3 euler = rot.eulerAngles;
 
-                _rotation =  new Vector3(euler.x+180,-euler.z, euler.y + 180);
+                _rotation = new Vector3(euler.x + 180, -euler.z, euler.y + 180);
                 _position = Quaternion.Euler(_rotation) * _position;
-                
+
             }
 
             public Vector3 Position
@@ -312,7 +331,7 @@ public class Calibration
             CameraCalibrationResult calibration = new CameraCalibrationResult(
                  sensorSize.Width, sensorSize.Height,
                  new CameraCalibrationResult.Extrinsics(MatToVector3(translationVectors[0]), MatToVector3(rotationVectors[0])),
-                 new CameraCalibrationResult.Intrinsics(IntrinsicMatrix),
+                 new CameraCalibrationResult.Intrinsics(IntrinsicMatrix, sensorSize),
                  new CameraCalibrationResult.Distortion(distortionCoeffs),
                  reprojectionError
                  );

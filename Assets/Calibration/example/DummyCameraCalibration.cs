@@ -44,35 +44,45 @@ public class DummyCameraCalibration : MonoBehaviour
 
     }
 
+    public Matrix4x4 beforeMatrix;
+    public Matrix4x4 afterMatrix;
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
         if (compute)
         {
-//            compute = false;
+            //            compute = false;
             Sample();
             string status;
 
             //Compute calibration
 
             Emgu.CV.CvEnum.CalibType flags = Emgu.CV.CvEnum.CalibType.UseIntrinsicGuess;   // uses the intrinsicMatrix as initial estimation, or generates an initial estimation using imageSize
-                                                   //flags |= CalibType.FixFocalLength;      // if (CV_CALIB_USE_INTRINSIC_GUESS) then: {fx,fy} are constant
-                                                   //flags |= CalibType.FixAspectRatio;      // if (CV_CALIB_USE_INTRINSIC_GUESS) then: fy is a free variable, fx/fy stays constant
-                                                   // flags |= CalibType.FixPrincipalPoint;   // if (CV_CALIB_USE_INTRINSIC_GUESS) then: {cx,cy} are constant
-            flags |= (CalibType.FixK1               //  Given CalibType.FixK{i}: if (CV_CALIB_USE_INTRINSIC_GUESS) then: K{i} = distortionCoefficents[i], else:k ki = 0
+            //flags |= CalibType.FixFocalLength;      // if (CV_CALIB_USE_INTRINSIC_GUESS) then: {fx,fy} are constant
+           // flags |= CalibType.FixAspectRatio;      // if (CV_CALIB_USE_INTRINSIC_GUESS) then: fy is a free variable, fx/fy stays constant
+            //flags |= CalibType.FixPrincipalPoint;   // if (CV_CALIB_USE_INTRINSIC_GUESS) then: {cx,cy} are constant
+            /*flags |= (CalibType.FixK1               //  Given CalibType.FixK{i}: if (CV_CALIB_USE_INTRINSIC_GUESS) then: K{i} = distortionCoefficents[i], else:k ki = 0
                      | CalibType.FixK2
                      | CalibType.FixK3
                      | CalibType.FixK4
                      | CalibType.FixK5
                      | CalibType.FixK6);
+           // flags |= CalibType.FixIntrinsic;
             flags |= CalibType.ZeroTangentDist;     // tangential distortion is zero: {P1,P2} = {0,0}
-            
+            */
             result = Calibration.ComputeCameraCalibration(xyz, uv, new System.Drawing.Size(_camera.pixelWidth, _camera.pixelHeight), new Emgu.CV.Matrix<double>(3, 3), out status);
             Debug.Log(status);
-            Debug.Log("pos:" + result.extrinsics.Position);
+            
+            beforeMatrix = _camera.projectionMatrix;
+            afterMatrix = result.intrinsics.ProjectionMatrix(near,far);
+
             Debug.Log("distortion:" + result.distortion.ToString());
-            if (otherCamera != null)
-                result.extrinsics.ApplyToTransform(otherCamera.transform);
+
+        }
+        if (otherCamera != null && afterMatrix!=null)
+        {
+            result.extrinsics.ApplyToTransform(otherCamera.transform);
+            otherCamera.projectionMatrix = afterMatrix;
         }
     }
     private void OnDrawGizmos()
@@ -135,13 +145,13 @@ public class DummyCameraCalibration : MonoBehaviour
     {
         //if (board != null)
         {
-            Vector3[] corners= board.Corners;
+            Vector3[] corners = board.Corners;
 
             count = corners.Length;
             uv = new Vector2[count];
             xyz = new Vector3[count];
-            
-            for(int idx = 0;idx<corners.Length;++idx)
+
+            for (int idx = 0; idx < corners.Length; ++idx)
             {
                 xyz[idx] = corners[idx];
                 Vector3 uvd = _camera.WorldToScreenPoint(corners[idx]);
@@ -149,6 +159,6 @@ public class DummyCameraCalibration : MonoBehaviour
             }
 
         }
-        
+
     }
 }
