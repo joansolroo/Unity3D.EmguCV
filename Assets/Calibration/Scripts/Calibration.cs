@@ -26,6 +26,7 @@ public class Calibration
 
             public int width;
             public int height;
+
             // The output camera matrix(A)[fx 0 cx; 0 fy cy; 0 0 1]
             // the remaining cells are zero
             public Matrix4x4 IntrinsicMatrix
@@ -33,10 +34,10 @@ public class Calibration
                 get
                 {
                     Matrix4x4 intrinsicMatrix = new Matrix4x4();
-                    intrinsicMatrix[0, 0] = ((this.focalLength.x) / width) * 2;
-                    intrinsicMatrix[0, 2] = 0.5f - (this.center.x) / width;
-                    intrinsicMatrix[1, 1] = ((this.focalLength.y) / height) * 2;
-                    intrinsicMatrix[1, 2] = 0.5f-((this.center.y) / height);
+                    intrinsicMatrix[0, 0] = (this.focalLength.x / width) * 2;
+                    intrinsicMatrix[0, 2] = 2 * (this.center.x / width) - 1;// TODO double check sign
+                    intrinsicMatrix[1, 1] = (this.focalLength.y / height) * 2;
+                    intrinsicMatrix[1, 2] = 1 - 2 * (this.center.y / height);// TODO double check sign
                     intrinsicMatrix[2, 2] = 1;
                     return intrinsicMatrix;
                 }
@@ -53,6 +54,8 @@ public class Calibration
                 width = resolution.Width;
                 height = resolution.Height;
             }
+
+            // Perspective corrected intrinsic matrix, including near and far plane
             public Matrix4x4 ProjectionMatrix(float near, float far)
             {
                 Matrix4x4 projection = this.IntrinsicMatrix;
@@ -120,33 +123,16 @@ public class Calibration
             public Distortion(Emgu.CV.IInputOutputArray cvMat)
             {
                 double[] coefficients = new double[8];
-                Matrix<double> mat = (Matrix<double>)cvMat;
-                Mat m = cvMat.GetOutputArray().GetMat();
-                
-                m.CopyTo<double>(coefficients);
+                cvMat.GetOutputArray().GetMat().CopyTo<double>(coefficients);
                 k1 = (float)coefficients[0];
                 k2 = (float)coefficients[1];
                 p1 = (float)coefficients[2];
                 p2 = (float)coefficients[3];
 
-                k3 = k4 = k5 = k6 = 0;
-                int length = coefficients.Length;
-                if (length > 4)//stupid check
-                {
-                    k3 = (float)coefficients[4];
-                    if (length > 5)
-                    {
-                        k4 = (float)coefficients[5];
-                        if (length > 6)
-                        {
-                            k5 = (float)coefficients[6];
-                            if (length > 7)
-                            {
-                                k6 = (float)coefficients[7];
-                            }
-                        }
-                    }
-                }
+                k3 = (float)coefficients[4];
+                k4 = (float)coefficients[5];
+                k5 = (float)coefficients[6];
+                k6 = (float)coefficients[7];
             }
             new public string ToString()
             {
