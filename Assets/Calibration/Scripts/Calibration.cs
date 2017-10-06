@@ -175,6 +175,19 @@ public class Calibration
             }
         }
 
+        public double Error
+        {
+            get
+            {
+                return error;
+            }
+
+            set
+            {
+                error = value;
+            }
+        }
+
         public CameraCalibrationResult(int _width, int _height, Extrinsics __extrinsics, Intrinsics __intrinsics, Distortion __distortion, double _error)
         {
             width = _width;

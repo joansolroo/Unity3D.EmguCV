@@ -46,6 +46,9 @@ public class DummyCameraCalibration : MonoBehaviour
 
     public Matrix4x4 beforeMatrix;
     public Matrix4x4 afterMatrix;
+
+    public double error;
+
     // Update is called once per frame
     void LateUpdate()
     {
@@ -77,6 +80,7 @@ public class DummyCameraCalibration : MonoBehaviour
             afterMatrix = result.intrinsics.ProjectionMatrix(near,far);
 
             Debug.Log("distortion:" + result.distortion.ToString());
+            error = result.Error;
 
         }
         if (otherCamera != null && afterMatrix!=null)
