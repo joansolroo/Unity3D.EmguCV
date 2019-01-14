@@ -41,7 +41,7 @@ public class DummyCameraCalibration : MonoBehaviour
     {
         _camera = GetComponent<Camera>();
         CvInvoke.CheckLibraryLoaded();
-
+       
     }
 
     public Matrix4x4 beforeMatrix;
@@ -73,7 +73,7 @@ public class DummyCameraCalibration : MonoBehaviour
                                                                                           // flags |= CalibType.FixIntrinsic;
                                                                                            flags |= CalibType.ZeroTangentDist;     // tangential distortion is zero: {P1,P2} = {0,0}
                                                                                            */
-            result = Calibration.ComputeCameraCalibration(xyz, uv, new System.Drawing.Size(_camera.pixelWidth, _camera.pixelHeight), new Emgu.CV.Matrix<double>(3, 3), out status);
+            result = Calibration.ComputeCameraCalibration(xyz, uv, new System.Drawing.Size(_camera.pixelWidth, _camera.pixelHeight), new Emgu.CV.Matrix<double>(3, 3), out status,true,true,flags);
             Debug.Log(status);
             
             beforeMatrix = _camera.projectionMatrix;
@@ -83,7 +83,7 @@ public class DummyCameraCalibration : MonoBehaviour
             error = result.Error;
 
         }
-        if (otherCamera != null && afterMatrix!=null)
+        if (otherCamera != null && afterMatrix!=Matrix4x4.identity)
         {
             result.extrinsics.ApplyToTransform(otherCamera.transform);
             otherCamera.projectionMatrix = afterMatrix;
@@ -111,7 +111,7 @@ public class DummyCameraCalibration : MonoBehaviour
                 Gizmos.color = new Color(uv[current].x, uv[current].y, 0, 0.5f);
                 Gizmos.DrawLine(transform.position, xyz[current]);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Debug.Log("" + current + "/" + count);
             }

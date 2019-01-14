@@ -35,9 +35,9 @@ public class Calibration
                 {
                     Matrix4x4 intrinsicMatrix = new Matrix4x4();
                     intrinsicMatrix[0, 0] = (this.focalLength.x / width) * 2;
-                    intrinsicMatrix[0, 2] = 2 * (this.center.x / width) - 1;// TODO double check sign
+                    intrinsicMatrix[0, 2] = 2 * (this.center.x / width) - 1;
                     intrinsicMatrix[1, 1] = (this.focalLength.y / height) * 2;
-                    intrinsicMatrix[1, 2] = 1 - 2 * (this.center.y / height);// TODO double check sign
+                    intrinsicMatrix[1, 2] = 1 - 2 * (this.center.y / height);
                     intrinsicMatrix[2, 2] = 1;
                     return intrinsicMatrix;
                 }
@@ -188,6 +188,22 @@ public class Calibration
             }
         }
 
+        public int Width
+        {
+            get
+            {
+                return width;
+            }
+        }
+
+        public int Height
+        {
+            get
+            {
+                return height;
+            }
+        }
+
         public CameraCalibrationResult(int _width, int _height, Extrinsics __extrinsics, Intrinsics __intrinsics, Distortion __distortion, double _error)
         {
             width = _width;
@@ -325,8 +341,6 @@ public class Calibration
                 out rotationVectors,
                 out translationVectors);
 
-
-            var rotation = new Matrix<double>(rotationVectors[0].Rows, rotationVectors[0].Cols, rotationVectors[0].DataPointer);
 
             CameraCalibrationResult calibration = new CameraCalibrationResult(
                  sensorSize.Width, sensorSize.Height,
