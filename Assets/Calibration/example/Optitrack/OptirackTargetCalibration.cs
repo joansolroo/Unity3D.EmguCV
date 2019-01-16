@@ -15,7 +15,6 @@ public class OptirackTargetCalibration : MonoBehaviour
     [SerializeField] bool update = false;
     [SerializeField] bool reset = false;
     [SerializeField] bool sample = false;
-    [SerializeField] bool dummy = false;
 
     [SerializeField] bool compute = false;
 
@@ -165,9 +164,13 @@ public class OptirackTargetCalibration : MonoBehaviour
         }
     }
     #region Sampling
-    //For debugging the dummy
+    //For debugging the dummy    
+    [Header("Dummy")]
+    [SerializeField] bool dummy = false;
     [SerializeField] float DummyNoise = 0;
     float sumNoise = 0;
+    [SerializeField] float depth = 100;
+    [SerializeField] float noiseFactor = 0.5f;
     private void Sample()
     {
         int idx = xyz.Count % targetUV.Length;
@@ -176,8 +179,7 @@ public class OptirackTargetCalibration : MonoBehaviour
         // For debug purposes
         if (dummy)
         {
-            float depth = 100;
-            float noiseFactor = 0.5f;
+
             Vector3 noise = new Vector3(UnityEngine.Random.Range(-noiseFactor, noiseFactor), UnityEngine.Random.Range(-noiseFactor, noiseFactor), UnityEngine.Random.Range(-noiseFactor, noiseFactor));
             sumNoise += noise.magnitude;
             Vector3 pos = _camera.ViewportToWorldPoint(
