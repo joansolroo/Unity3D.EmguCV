@@ -20,6 +20,30 @@ public class CheckerBoard : MonoBehaviour
             return corners;
         }
     }
+    private void Awake()
+    {
+        OnValidate();        
+    }
+    private void OnValidate()
+    {
+        int cornerCount = (width - 1) * (height - 1);
+        if (corners == null || corners.Length != cornerCount)
+        {
+            corners = new Vector3[cornerCount];
+        }
+        int idx = 0;
+        for (int x = 1; x < width; ++x)
+        {
+            for (int y = 1; y < height; ++y)
+            {
+                float u = ((float)x) / width;
+                float v = ((float)y) / height;
+
+                Vector3 corner = this.transform.TransformPoint(new Vector3(u - 0.5f, 0, v - 0.5f));
+                corners[idx++] = corner;
+            }
+        }
+    }
 
     private void OnDrawGizmos()
     {
@@ -52,11 +76,11 @@ public class CheckerBoard : MonoBehaviour
             }
         }
         {
-            int cornerCount = (width - 1) * (height - 1);
+           /* int cornerCount = (width - 1) * (height - 1);
             if (corners == null || corners.Length != cornerCount)
             {
                 corners = new Vector3[cornerCount];
-            }
+            }*/
             int idx = 0;
             for (int x = 1; x < width; ++x)
             {
@@ -65,8 +89,8 @@ public class CheckerBoard : MonoBehaviour
                     float u = ((float)x) / width;
                     float v = ((float)y) / height;
 
-                    Vector3 corner = this.transform.TransformPoint(new Vector3(u - 0.5f, 0, v - 0.5f));
-                    corners[idx++] = corner;
+                    Vector3 corner = corners[idx++];// this.transform.TransformPoint(new Vector3(u - 0.5f, 0, v - 0.5f));
+                   // corners[idx++] = corner;
                     Gizmos.color = new Color(u, v, 0);
                     Gizmos.DrawSphere(corner, 0.1f);
                     Gizmos.DrawWireSphere(corner, 0.15f);

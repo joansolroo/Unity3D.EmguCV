@@ -8,6 +8,7 @@ using Emgu.CV;
 using Emgu.CV.Structure;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Util;
+using System.Runtime.InteropServices;
 
 public class Calibration
 {
@@ -458,6 +459,7 @@ public class Calibration
             using (VectorOfMat rVecs = new VectorOfMat())
             using (VectorOfMat tVecs = new VectorOfMat())
             {
+
                 reprojectionError = CvInvoke.CalibrateCamera(
                     vvObjPts,
                     vvImgPts,
@@ -483,5 +485,62 @@ public class Calibration
             }
             return reprojectionError;
         }
+    }
+
+    static public Vector2[] FindCheckerBoardCorners(WebCamTexture picture, Size boardSize)
+    {
+        Color32[] data = null;
+
+        if (data == null || (data.Length != picture.width * picture.height))
+        {
+            data = new Color32[picture.width * picture.height];
+        }
+        return FindCheckerBoardCorners(picture.GetPixels32(data), picture.width, picture.height, boardSize);
+    }
+
+    static Vector2[] FindCheckerBoardCorners(Color32[] data, int width, int height, Size boardSize)
+    {
+        /*
+        byte[] bytes = null;
+        if (bytes == null || bytes.Length != data.Length * 3)
+        {
+            bytes = new byte[data.Length * 3];
+        }
+        */
+        Vector2[] corners = null;
+        GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+        //GCHandle resultHandle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+        using (Mat bgra = new Mat(new Size(width, height), DepthType.Cv8U, 4, handle.AddrOfPinnedObject(), width * 4))
+        //using (Mat bgr = new Mat(height, width, DepthType.Cv8U, 3, resultHandle.AddrOfPinnedObject(), width * 3))
+        {
+           // CvInvoke.CvtColor(bgra, bgr, ColorConversion.Bgra2Bgr);
+            IInputArray image = bgra;
+            VectorOfPointF vec = new VectorOfPointF();
+            CvInvoke.FindChessboardCorners(image, boardSize, vec);
+            PointF[] pCorners = vec.ToArray();
+
+            corners = new Vector2[pCorners.Length];
+            for (int p = 0; p < corners.Length; ++p)
+            {
+                corners[p].x = pCorners[p].X / width;
+                corners[p].y = pCorners[p].Y / height;
+            }
+            
+        }
+        handle.Free();
+        //resultHandle.Free();
+        return corners;
+    }
+
+    static void RawToTexture2D(byte[] bytes, int width, int height , ref Texture2D resultTexture)
+    {
+        if (resultTexture == null || resultTexture.width != width ||
+            resultTexture.height != height)
+        {
+            resultTexture = new Texture2D(width, height, TextureFormat.RGB24, false);
+        }
+
+        resultTexture.LoadRawTextureData(bytes);
+        resultTexture.Apply();
     }
 }
