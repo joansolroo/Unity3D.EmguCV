@@ -15,7 +15,7 @@ public class CameraGrid : MonoBehaviour
         {
             _camera = GetComponent<Camera>();
         }
-        Gizmos.color = Color.white;
+        Gizmos.color = Color.gray;
         for (int x = 0; x <= size - 1; ++x)
         {
             Vector3 from = _camera.ViewportToWorldPoint(new Vector3(x / (float)(size - 1), 0, 5));

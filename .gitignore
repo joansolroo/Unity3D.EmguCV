@@ -81,3 +81,8 @@ player_win_x86.pdb
 *.exe
 *.exe
 *.dmp
+.vs/Unity3D.EmguCV/v15/Server/sqlite3/db.lock
+*.ide
+*.ide-shm
+*.ide-wal
+*.ide-shm
