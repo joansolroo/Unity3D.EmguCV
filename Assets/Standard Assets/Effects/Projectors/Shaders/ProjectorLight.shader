@@ -14,7 +14,7 @@ Shader "Projector/Light" {
 			ZWrite Off
 			ColorMask RGB
 			Blend One DstAlpha // Traditional transparency
-			Offset -1, -1
+			Offset -1,-1
 	
 			CGPROGRAM
 			#pragma vertex vert
@@ -48,10 +48,18 @@ Shader "Projector/Light" {
 			
 			fixed4 frag (v2f i) : SV_Target
 			{
-				fixed4 texS = tex2Dproj (_ShadowTex, UNITY_PROJ_COORD(i.uvShadow));
-				texS.rgb *= _Color.rgb;
-				texS.a = 1.0-texS.a;
-	
+				float4 uv = UNITY_PROJ_COORD(i.uvShadow);
+				uv /= uv.w;
+				fixed4 texS;
+				if (uv.x > 0 && uv.x < 1 && uv.y >0 && uv.y < 1) {
+					texS = tex2Dproj(_ShadowTex, uv);
+					texS.rgb *= _Color.rgb;
+					texS.a = 1.0 - texS.a;
+				}
+				else {
+					texS = fixed4(0, 0, 0, 0);
+				}
+
 				fixed4 texF = tex2Dproj (_FalloffTex, UNITY_PROJ_COORD(i.uvFalloff));
 				fixed4 res = texS * texF.a;
 

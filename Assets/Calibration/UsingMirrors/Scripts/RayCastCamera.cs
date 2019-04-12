@@ -131,7 +131,7 @@ public class RayCastCamera : MonoBehaviour
                 Ray last = rays[rays.Count - 1];
                 result[rays.Count] = last.origin + last.direction * lengths[rays.Count - 2];
             }
-            else
+            else if (lengths.Count > 1)
             {
                 Ray last = rays[rays.Count - 1];
                 result[rays.Count] = last.origin + last.direction * lengths[rays.Count - 2];
@@ -178,6 +178,7 @@ public class RayCastCamera : MonoBehaviour
         GUI.Label(new Rect(0, 60, 100, 50), "Deviation:" + (lengthDev).ToString("0.0") + "cm");
     }
 
+    BouncyRay physicalCenterBounce;
     public bool compute = false;
     private void OnDrawGizmos()
     {
@@ -212,11 +213,27 @@ public class RayCastCamera : MonoBehaviour
         }
         //this is the optical center
         {
-
-            BouncyRay ray = rays[centerRay];
+            idxRayOpticalCenter = (size-1) / 2 + size*(size-1) / 2;
+            BouncyRay ray = rays[idxRayOpticalCenter];
             Vector3[] hits = ray.GetPoints();
             Vector2 uv = ray.uv;
             Gizmos.color = Color.blue;
+
+            for (int p = 1; p < hits.Length; ++p)
+            {
+                Gizmos.DrawLine(hits[p - 1], hits[p]);
+                Gizmos.DrawSphere(hits[p], 0.25f);
+            }
+
+            Ray unfolded = ray.Unfolded;
+            Gizmos.DrawLine(unfolded.origin, unfolded.origin + unfolded.direction * ray.Length);
+        }
+        {
+            
+            BouncyRay ray = physicalCenterBounce;
+            Vector3[] hits = ray.GetPoints();
+            Vector2 uv = ray.uv;
+            Gizmos.color = Color.white;
 
             for (int p = 1; p < hits.Length; ++p)
             {
@@ -258,13 +275,13 @@ public class RayCastCamera : MonoBehaviour
         Gizmos.DrawWireSphere(center / intersections, 0.1f);
     }
 
-    public int centerRay = 0;
+    public int idxRayOpticalCenter = 0;
     void Compute()
     {
         Awake();
         float delta = 1.0f / size;
         int lastCount = count;
-        count = (size + 1) * (size + 1);
+        count = (size) * (size);
         if (rays == null || rays.Length != lastCount)
         {
             uv = new Vector2[count];
@@ -275,38 +292,26 @@ public class RayCastCamera : MonoBehaviour
         int current = 0;
         Vector3 origin = this.transform.position;
 
-        for (int x = 0; x <= size; ++x)
+        for (int x = 0; x < size; ++x)
         {
-            for (int y = 0; y <= size; ++y)
+            for (int y = 0; y < size; ++y)
             {
 
-                Vector2 uv = new Vector2(x, y) / size;
+                Vector2 uv = new Vector2(x, y) / (size-1);
                 Ray ray = _camera.ViewportPointToRay(new Vector3(uv.x, uv.y, 1));
 
                 rays[current] = new BouncyRay(ray)
                 {
                     uv = uv
                 };
-
-                if (x == (size) / 2 && y == (size) / 2)
-                {
-                    centerRay = current;
-                }
                 bool hit = CastRay(ray, ref rays[current]);
-
-                /*if (rays[current].Hit)
-                {
-                    ++hits;
-                    lengths.Add(length);
-                    ;
-                }*/
 
                 ++current;
             }
         }
 
         // Sîmple stats
-        centerRay = size / 2 + size * size / 2;
+        idxRayOpticalCenter = (size - 1) / 2 + size * (size - 1) / 2;
         int hits = 0;
         lengthAvg = 0;
         foreach (BouncyRay r in rays)
@@ -360,11 +365,14 @@ public class RayCastCamera : MonoBehaviour
             centroidIntersection /= intersectionCount;
             if (otherCamera != null)
             {
+                Ray physicalCenterRay = new Ray(this.transform.position, this.transform.forward);
+                physicalCenterBounce = new BouncyRay(physicalCenterRay);
+                bool hit = CastRay(physicalCenterRay, ref physicalCenterBounce);
 
-                Ray TheCenterRay = rays[centerRay].Unfolded;
+                Ray TheCenterRay = physicalCenterBounce.Unfolded;// rays[idxRayOpticalCenter].Unfolded;
                 otherCamera.CopyFrom(_camera);
                 otherCamera.transform.position = centroidIntersection;
-                Debug.Log("" + centerRay + ": " + TheCenterRay.origin);
+                Debug.Log("" + idxRayOpticalCenter + ": " + TheCenterRay.origin);
                 otherCamera.transform.rotation = Quaternion.LookRotation(TheCenterRay.origin - centroidIntersection, Vector3.down);
                 Gizmos.DrawLine(TheCenterRay.origin, centroidIntersection);
             }

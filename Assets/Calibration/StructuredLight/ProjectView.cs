@@ -33,25 +33,28 @@ public class ProjectView : MonoBehaviour {
 
     void OnValidate()
     {
-        _camera = GetComponent<Camera>();
-        _projector = GetComponent<Projector>();
-        _projector.aspectRatio = _camera.aspect;
-        _projector.nearClipPlane = _camera.nearClipPlane;
-        _projector.farClipPlane = _camera.farClipPlane;
-        _projector.fieldOfView = _camera.fieldOfView;
-
-        screenShader = new Material(s);
-        screenShader.SetFloat("_GridX", GridX);
-        screenShader.SetFloat("_GridY", GridY);
-        screenShader.SetFloat("_Border", border);
-
-        if (renderTexture == null || renderTexture.width != _camera.pixelWidth || renderTexture.height != _camera.pixelHeight)
+        if (this.enabled)
         {
-            renderTexture = new RenderTexture(_camera.pixelWidth, _camera.pixelHeight, 0, RenderTextureFormat.ARGB32);
+            _camera = GetComponent<Camera>();
+            _projector = GetComponent<Projector>();
+            _projector.aspectRatio = _camera.aspect;
+            _projector.nearClipPlane = _camera.nearClipPlane;
+            _projector.farClipPlane = _camera.farClipPlane;
+            _projector.fieldOfView = _camera.fieldOfView;
+
+            screenShader = new Material(s);
+            screenShader.SetFloat("_GridX", GridX);
+            screenShader.SetFloat("_GridY", GridY);
+            screenShader.SetFloat("_Border", border);
+
+            if (renderTexture == null || renderTexture.width != _camera.pixelWidth || renderTexture.height != _camera.pixelHeight)
+            {
+                renderTexture = new RenderTexture(_camera.pixelWidth, _camera.pixelHeight, 0, RenderTextureFormat.ARGB32);
+                renderTexture.wrapMode = TextureWrapMode.Clamp;
+            }
+            _projector.material.SetTexture("_ShadowTex", renderTexture);
+
         }
-        _projector.material.SetTexture("_ShadowTex", renderTexture);
-
-
     }
 
 
