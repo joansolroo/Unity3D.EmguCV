@@ -31,27 +31,12 @@ public class SeeThroughWindow : MonoBehaviour
                 (-p3.distance * Vector3.Cross(p1.normal, p2.normal))) /
             (Vector3.Dot(p1.normal, Vector3.Cross(p2.normal, p3.normal)));
     }
+   
 
-    void DrawFrustum(Camera cam)
-    {
-        Vector3[] nearCorners = new Vector3[4]; //Approx'd nearplane corners
-        Vector3[] farCorners = new Vector3[4]; //Approx'd farplane corners
-        Plane[] camPlanes = GeometryUtility.CalculateFrustumPlanes(cam); //get planes from matrix
-        Plane temp = camPlanes[1]; camPlanes[1] = camPlanes[2]; camPlanes[2] = temp; //swap [1] and [2] so the order is better for the loop
-
-        for (int i = 0; i < 4; i++)
-        {
-            nearCorners[i] = ThreePlaneIntersection(camPlanes[4], camPlanes[i], camPlanes[(i + 1) % 4]); //near corners on the created projection matrix
-            farCorners[i] = ThreePlaneIntersection(camPlanes[5], camPlanes[i], camPlanes[(i + 1) % 4]); //far corners on the created projection matrix
-        }
-
-        for (int i = 0; i < 4; i++)
-        {
-            Debug.DrawLine(nearCorners[i], nearCorners[(i + 1) % 4], Color.red, Time.deltaTime, false); //near corners on the created projection matrix
-            Debug.DrawLine(farCorners[i], farCorners[(i + 1) % 4], Color.red, Time.deltaTime, false); //far corners on the created projection matrix
-            Debug.DrawLine(nearCorners[i], farCorners[i], Color.red, Time.deltaTime, false); //sides of the created projection matrix
-        }
-    }
+    Vector3 va; // from pe to pa
+    Vector3 vb; // from pe to pb
+    Vector3 vc; // from pe to pc
+    Vector3 vd; // from pe to pd
 
     void Compute()
     {
@@ -72,10 +57,10 @@ public class SeeThroughWindow : MonoBehaviour
         Vector3 vu = (pc - pa).normalized; // up axis of screen
         Vector3 vn = Vector3.Cross(vr, vu).normalized; // normal vector of screen
 
-        Vector3 va = pa - pe; // from pe to pa
-        Vector3 vb = pb - pe; // from pe to pb
-        Vector3 vc = pc - pe; // from pe to pc
-        Vector3 vd = pd - pe; // from pe to pd
+        va = pa - pe; // from pe to pa
+        vb = pb - pe; // from pe to pb
+        vc = pc - pe; // from pe to pc
+        vd = pd - pe; // from pe to pd
 
         float n = -lookTarget.InverseTransformPoint(theCam.transform.position).z; // distance to the near clip plane (screen)
         float f = theCam.farClipPlane; // distance of far clipping plane
@@ -95,21 +80,42 @@ public class SeeThroughWindow : MonoBehaviour
         p[3, 2] = -1.0f;
 
         theCam.projectionMatrix = p; // Assign matrix to camera
-
-        if (drawNearCone)
-        { //Draw lines from the camera to the corners f the screen
-            Debug.DrawRay(theCam.transform.position, va, Color.blue);
-            Debug.DrawRay(theCam.transform.position, vb, Color.blue);
-            Debug.DrawRay(theCam.transform.position, vc, Color.blue);
-            Debug.DrawRay(theCam.transform.position, vd, Color.blue);
-        }
-
-        if (drawFrustum) DrawFrustum(theCam); //Draw actual camera frustum
     }
-    /*
+    
 	void OnDrawGizmos(){
         Start();
         Compute();
-	}*/
-	
+        if (drawNearCone)
+        {
+            Gizmos.color = Color.blue;
+
+            //Draw lines from the camera to the corners f the screen
+            Gizmos.DrawLine(theCam.transform.position, theCam.transform.TransformPoint(va));
+            Gizmos.DrawLine(theCam.transform.position, theCam.transform.TransformPoint(vb));
+            Gizmos.DrawLine(theCam.transform.position, theCam.transform.TransformPoint(vc));
+            Gizmos.DrawLine(theCam.transform.position, theCam.transform.TransformPoint(vd));
+        }
+
+        if (drawFrustum)  //Draw actual camera frustum
+        {
+            Vector3[] nearCorners = new Vector3[4]; //Approx'd nearplane corners
+            Vector3[] farCorners = new Vector3[4]; //Approx'd farplane corners
+            Plane[] camPlanes = GeometryUtility.CalculateFrustumPlanes(theCam); //get planes from matrix
+            Plane temp = camPlanes[1]; camPlanes[1] = camPlanes[2]; camPlanes[2] = temp; //swap [1] and [2] so the order is better for the loop
+
+            for (int i = 0; i < 4; i++)
+            {
+                nearCorners[i] = ThreePlaneIntersection(camPlanes[4], camPlanes[i], camPlanes[(i + 1) % 4]); //near corners on the created projection matrix
+                farCorners[i] = ThreePlaneIntersection(camPlanes[5], camPlanes[i], camPlanes[(i + 1) % 4]); //far corners on the created projection matrix
+            }
+            Gizmos.color = Color.red;
+            for (int i = 0; i < 4; i++)
+            {
+                Gizmos.DrawLine(nearCorners[i], nearCorners[(i + 1) % 4]); //near corners on the created projection matrix
+                Gizmos.DrawLine(farCorners[i], farCorners[(i + 1) % 4]); //far corners on the created projection matrix
+                Gizmos.DrawLine(nearCorners[i], farCorners[i]); //sides of the created projection matrix
+            }
+        }
+    }
+
 }
