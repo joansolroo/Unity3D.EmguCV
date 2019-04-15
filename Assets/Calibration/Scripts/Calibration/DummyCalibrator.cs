@@ -18,6 +18,7 @@ public class DummyCalibrator : Calibrator
     [Header("Target properties (REQUIRED)")]
     [SerializeField] Animation orbit;
 
+    [SerializeField] protected Vector2[] targetUV = new Vector2[0]; //fixed UV points to sample
     // Use this for initialization
     void Start()
     {

@@ -19,6 +19,10 @@ public class MarkerCalibrator : Calibrator
 
     [Header("Target properties (REQUIRED)")]
     [SerializeField] Marker target;
+    [SerializeField] protected Vector2[] targetUV = new Vector2[0]; //fixed UV points to sample
+    [SerializeField] bool fake = false;
+    [SerializeField] float noise = 0.1f; //noise
+   
 
     // Use this for initialization
     void Start()
@@ -52,6 +56,15 @@ public class MarkerCalibrator : Calibrator
     // Update is called once per frame
     void LateUpdate()
     {
+        if (fake)
+        {
+            int pass = xyz.Count / targetUV.Length;
+           
+            Vector2 __uv = currentUV();
+            Vector3 fakeXYZ = SourceCamera.ViewportToWorldPoint(new Vector3(__uv.x, __uv.y, 40+10*pass)) + new Vector3(Random.Range(-noise, noise), Random.Range(-noise, noise), Random.Range(-noise, noise));
+            target.transform.LookAt(SourceCamera.transform.position+ new Vector3(Random.Range(-noise,noise), Random.Range(-noise, noise), Random.Range(-noise, noise)));
+            target.transform.position = fakeXYZ;
+        }
         if (update)
         {
             reset |= Input.GetKeyDown(resetKey);
@@ -89,15 +102,21 @@ public class MarkerCalibrator : Calibrator
             SubSample();
         }
     }
+    Vector2 currentUV()
+    {
+        int idx = xyz.Count % targetUV.Length;
+        int pass = xyz.Count / targetUV.Length;
+
+        return targetUV[idx];
+
+    }
     private bool SampleSingle()
     {
 
         if (target.IsTracked())
         {
-            int idx = xyz.Count % targetUV.Length;
-            int pass = xyz.Count / targetUV.Length;
 
-            AddSample(targetUV[idx], target.GetPosition());
+            AddSample(currentUV(), target.GetPosition());
         }
         return target.IsTracked();
     }
@@ -126,7 +145,77 @@ public class MarkerCalibrator : Calibrator
             Gizmos.DrawLine(point00, point01);
             Gizmos.DrawLine(point10, point11);
         }
-        //Gizmos.DrawLine()
     }
-    #endregion
+    //Gizmos.DrawLine()
+
+
+    void OnDrawGizmosSelected()
+    {
+        if (targetUV.Length == samplingWidth * samplingHeight)
+        {
+            if (subsampling)
+            {
+                SubSample();
+                for (int x = 0; x < samplingWidth - 1; ++x)
+                {
+                    for (int y = 0; y < samplingHeight - 1; ++y)
+                    {
+                        int idx00 = (y) + (x) * samplingHeight;
+                        int idx10 = (y) + (x + 1) * samplingHeight;
+                        int idx01 = (y + 1) + (x) * samplingHeight;
+                        int idx11 = (y + 1) + (x + 1) * samplingHeight;
+
+
+                        Vector3 p00 = (Vector3)targetUV[idx00];
+                        Vector3 p10 = (Vector3)targetUV[idx10];
+                        Vector3 p01 = (Vector3)targetUV[idx01];
+                        Vector3 p11 = (Vector3)targetUV[idx11];
+
+                        Gizmos.color = Color.gray;
+                        Vector3 p00w = SourceCamera.ViewportToWorldPoint(new Vector3(0, 0, 20) + (Vector3)p00);
+                        Vector3 p10w = SourceCamera.ViewportToWorldPoint(new Vector3(0, 0, 20) + (Vector3)p10);
+                        Vector3 p01w = SourceCamera.ViewportToWorldPoint(new Vector3(0, 0, 20) + (Vector3)p01);
+                        Vector3 p11w = SourceCamera.ViewportToWorldPoint(new Vector3(0, 0, 20) + (Vector3)p11);
+
+                        Gizmos.DrawLine(p00w, p10w);
+                        Gizmos.DrawLine(p00w, p01w);
+                        Gizmos.DrawLine(p11w, p10w);
+                        Gizmos.DrawLine(p11w, p01w);
+                    }
+                }
+                for (int idx = 0; idx < subsampledXYZ.Count; ++idx)
+                {
+                    // Gizmos.color = Color.white;
+                    Gizmos.color = new Color(subsampledUV[idx].x, subsampledUV[idx].y, 0);
+                    Gizmos.DrawLine(SourceCamera.ViewportToWorldPoint(new Vector3(0, 0, 20) + (Vector3)subsampledUV[idx]), subsampledXYZ[idx]);
+                    Gizmos.DrawSphere(subsampledXYZ[idx], 0.125f);
+                }
+            }
+            else
+            {
+
+                for (int current = 0; current < xyz.Count; ++current)
+                {
+                    try
+                    {
+                        Gizmos.color = new Color(uv[current].x, uv[current].y, 0);
+                        Gizmos.DrawWireSphere(xyz[current], 0.1f);
+
+                        Gizmos.color = new Color(uv[current].x, uv[current].y, 0, 0.5f);
+                        Gizmos.DrawLine(transform.position, xyz[current]);
+                    }
+                    catch (System.Exception)
+                    {
+                        Debug.Log("" + current + "/" + xyz.Count);
+                    }
+                }
+            }
+        }
+        OnDrawGizmos();
+    }
+
+    
 }
+
+
+#endregion

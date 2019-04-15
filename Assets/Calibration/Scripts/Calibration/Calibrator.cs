@@ -33,7 +33,6 @@ public class Calibrator : MonoBehaviour {
     [SerializeField] [Range(2, 10)] protected int samplingWidth = 3;
     [SerializeField] [Range(2, 10)] protected int samplingHeight = 3;
     [SerializeField] protected float MaxUVRadius = 0.9f;
-    [SerializeField] protected Vector2[] targetUV = new Vector2[0]; //fixed UV points to sample
 
     [Header("Result")]
     public Matrix4x4 PerspectiveMatrixBefore;
@@ -170,69 +169,6 @@ public class Calibrator : MonoBehaviour {
     
     #region Gizmos
     
-    private void OnDrawGizmosSelected()
-    {
-        if (targetUV.Length == samplingWidth * samplingHeight)
-        {
-            if (subsampling)
-            {
-                SubSample();
-                for (int x = 0; x < samplingWidth - 1; ++x)
-                {
-                    for (int y = 0; y < samplingHeight - 1; ++y)
-                    {
-                        int idx00 = (y) + (x) * samplingHeight;
-                        int idx10 = (y) + (x + 1) * samplingHeight;
-                        int idx01 = (y + 1) + (x) * samplingHeight;
-                        int idx11 = (y + 1) + (x + 1) * samplingHeight;
-
-
-                        Vector3 p00 = (Vector3)targetUV[idx00];
-                        Vector3 p10 = (Vector3)targetUV[idx10];
-                        Vector3 p01 = (Vector3)targetUV[idx01];
-                        Vector3 p11 = (Vector3)targetUV[idx11];
-
-                        Gizmos.color = Color.white;
-                        Vector3 p00w = SourceCamera.ViewportToWorldPoint(new Vector3(0, 0, 20) + (Vector3)p00);
-                        Vector3 p10w = SourceCamera.ViewportToWorldPoint(new Vector3(0, 0, 20) + (Vector3)p10);
-                        Vector3 p01w = SourceCamera.ViewportToWorldPoint(new Vector3(0, 0, 20) + (Vector3)p01);
-                        Vector3 p11w = SourceCamera.ViewportToWorldPoint(new Vector3(0, 0, 20) + (Vector3)p11);
-
-                        Gizmos.DrawLine(p00w, p10w);
-                        Gizmos.DrawLine(p00w, p01w);
-                        Gizmos.DrawLine(p11w, p10w);
-                        Gizmos.DrawLine(p11w, p01w);
-                    }
-                }
-                for (int idx = 0; idx < subsampledXYZ.Count; ++idx)
-                {
-                    // Gizmos.color = Color.white;
-                    Gizmos.color = new Color(subsampledUV[idx].x, subsampledUV[idx].y, 0);
-                    Gizmos.DrawLine(SourceCamera.ViewportToWorldPoint(new Vector3(0, 0, 20) + (Vector3)subsampledUV[idx]), subsampledXYZ[idx]);
-                    Gizmos.DrawSphere(subsampledXYZ[idx], 0.125f);
-                }
-            }
-            else
-            {
-
-                for (int current = 0; current < xyz.Count; ++current)
-                {
-                    try
-                    {
-                        Gizmos.color = new Color(uv[current].x, uv[current].y, 0);
-                        Gizmos.DrawWireSphere(xyz[current], 0.1f);
-
-                        Gizmos.color = new Color(uv[current].x, uv[current].y, 0, 0.5f);
-                        Gizmos.DrawLine(transform.position, xyz[current]);
-                    }
-                    catch (Exception)
-                    {
-                        Debug.Log("" + current + "/" + xyz.Count);
-                    }
-                }
-            }
-        }
-    }
-    #endregion*/
+    #endregion
 }
 
