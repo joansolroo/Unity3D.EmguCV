@@ -58,7 +58,7 @@
 			{
 				float2 uv = float2(i.uv.x,i.uv.y);
 				uv = uv*2-1;					// Using normalized [-1,1] coordinates
-				uv *= resolution/(uint)2;				// ADDED STEP: using pixel coordinates [-resolution/2,+resolution/2] 	
+				uv *= resolution/(uint)2;		// ADDED STEP: using pixel coordinates [-resolution/2,+resolution/2] 	
 
 				float r2 = uv.x*uv.x+uv.y*uv.y; // distance from the center
 
